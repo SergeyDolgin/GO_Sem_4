@@ -5,27 +5,67 @@ import (
 )
 
 type Cache interface {
-	Get(k string) (string, bool)
-	Set(k, v string)
+	Get(k string) ([]byte, bool)
+	Set(k string, v []byte)
 }
 
-var _ Cache = (*cacheImpl)(nil)
+// var _ Cache = (*cacheImpl)(nil)
 
 // Доработает конструктор и методы кеша, так чтобы они соответствовали интерфейсу Cache
-func newCacheImpl() *cacheImpl {
-	return &cacheImpl{}
+func newCache(lim int) Cache {
+	return &cacheImpl{
+		limit: lim,
+	}
+}
+
+type node struct {
+	key   string
+	value []byte
+	prev  *node
+	next  *node
 }
 
 type cacheImpl struct {
+	len   int
+	tail  *node
+	head  *node
+	limit int
 }
 
-func (c *cacheImpl) Get(k string) (string, bool) {
+func (a *cacheImpl) Get(k string) ([]byte, bool) {
 	// TODO implement me
-	return "", false
+	c := a.tail
+
+	for c != nil {
+		if c.key == k {
+			return c.value, true
+		}
+		c = c.next
+	}
+	return nil, false
 }
 
-func (c *cacheImpl) Set(k, v string) {
+func (c *cacheImpl) Set(k string, v []byte) {
 	// TODO implement me
+	c.len++
+	if c.len == c.limit {
+		c.tail = c.tail.next
+		c.len--
+	}
+	if c.head == nil {
+		c.head = &node{
+			key:   k,
+			value: v,
+			prev:  c.head,
+		}
+	} else {
+		c.head.next = &node{
+			key:   k,
+			value: v,
+			prev:  c.head,
+		}
+		c.head = c.head.next
+	}
 }
 
 func newDbImpl(cache Cache) *dbImpl {
@@ -37,18 +77,20 @@ type dbImpl struct {
 	dbs   map[string]string
 }
 
-func (d *dbImpl) Get(k string) (string, bool) {
+func (d *dbImpl) Get(k string, v []byte) {
 	v, ok := d.cache.Get(k)
 	if ok {
-		return fmt.Sprintf("answer from cache: key: %s, val: %s", k, v), ok
+		// return fmt.Sprintf("answer from cache: key: %s, val: %s", k, v), ok
+		return fmt.Printf("answer from cache: key: %s\n", k), ok
 	}
 
 	v, ok = d.dbs[k]
-	return fmt.Sprintf("answer from dbs: key: %s, val: %s", k, v), ok
+	// return fmt.Sprintf("answer from dbs: key: %s, val: %s", k, v), ok
+	return fmt.Printf("answer from dbs: key: %s\n", k), ok
 }
 
 func main() {
-	c := newCacheImpl()
+	c := newCache()
 	db := newDbImpl(c)
 	fmt.Println(db.Get("test"))
 	fmt.Println(db.Get("hello"))
