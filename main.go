@@ -80,14 +80,12 @@ type dbImpl struct {
 func (d *dbImpl) Get(k string, v []byte) {
 	v, ok := d.cache.Get(k)
 	if ok {
-		// return fmt.Sprintf("answer from cache: key: %s, val: %s", k, v), ok
-		return fmt.Printf("answer from cache: key: %s\n", k), ok
+		return fmt.Sprintf("answer from cache: key: %s, val: %s", k, v []byte), ok
 	}
 
 	v, ok = d.dbs[k]
-	// return fmt.Sprintf("answer from dbs: key: %s, val: %s", k, v), ok
-	return fmt.Printf("answer from dbs: key: %s\n", k), ok
-}
+	return fmt.Sprintf("answer from dbs: key: %s, val: %s", k, v []byte), ok
+	}
 
 func main() {
 	c := newCache()
